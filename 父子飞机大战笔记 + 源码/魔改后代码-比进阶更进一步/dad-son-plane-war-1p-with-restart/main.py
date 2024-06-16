@@ -2,6 +2,7 @@ import pygame as pg
 import sys
 from constants import *
 from sprites import *
+import os
 
 class Game:
     def __init__(self) -> None:
@@ -16,10 +17,27 @@ class Game:
         self.bg = pg.image.load(pic_path+'startfield.jpg')
         self.bg = pg.transform.scale(self.bg,(WIDTH,1536))
         self.running = True
+        self.create_file()  # 如果没有highscore.txt就需要创建它
         self.load_datas()
+       
     
+    def create_file(self):
+        file = './highscore.txt'
+        if not os.path.exists(file):
+            with open(file,'w') as f:
+                f.write(str(0))
+
+    def save_best_score(self):
+        if self.score > self.highscore:
+            self.highscore = self.score
+            with open('./highscore.txt','w') as f:  
+                f.write(str(self.score))          
+
     def load_datas(self):
-        
+        # 加载最好成绩
+        file = open('./highscore.txt','r')
+        self.highscore = int(file.read())
+        file.close()
         # 加载玩家图片
         self.player_img1 = pg.image.load(pic_path+"my1.png")
         self.player_mini_img1 = pg.transform.scale(self.player_img1,(20,19))
@@ -80,6 +98,7 @@ class Game:
         pg.mixer.music.load(sound_path+'battle.ogg')
         pg.mixer.music.set_volume(0.8)
         pg.mixer.music.play(-1)
+        self.score = 0
         # 1.创建精灵组
         # 所有精灵的精灵组
         self.all_sprites = pg.sprite.Group()
@@ -125,6 +144,7 @@ class Game:
                     if self.playing:
                         self.playing = False
                     self.running = False
+                    self.save_best_score()
             # 背景图片向下滚动        
             self.screen.blit(self.bg,(0,height))
             height += 2
@@ -155,6 +175,7 @@ class Game:
         self.draw_text("Game Over",48,WIDTH/2,HEIGHT/2)
         self.draw_text("Press Any Key To Play Again",22,WIDTH/2,HEIGHT*3/4)
         pg.display.flip()
+        self.save_best_score() # 保存好成绩
         waiting = True
         while waiting:
             self.clock.tick(FPS)
